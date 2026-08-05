@@ -13,14 +13,8 @@ export interface EventItem {
   selesai: string;
   syarat: string;
   link: string;
-}
-
-export interface EventFormField {
-  key: "diskon" | "foto";
-  label: string;
-  type: "number" | "file";
-  min?: number;
-  max?: number;
+  butuh_diskon: boolean;
+  butuh_foto: boolean;
 }
 
 export interface Profile {

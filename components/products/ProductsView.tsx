@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { useActionState, useId, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import type { EventItem, Product } from "@/lib/types";
 import { PLATFORM_LABEL } from "@/lib/status";
@@ -12,33 +12,54 @@ const submitInitialState: SubmitState = null;
 
 const SUBMIT_STATUS_LABEL: Record<string, string> = {
   berhasil: "Berhasil",
-  pending: "Pending",
+  pending: "Menunggu Approval",
   gagal: "Gagal",
 };
 
 export function ProductsView({
   products,
   events,
-  initialEventId,
+  initialEventIds = [],
 }: {
   products: Product[];
   events: EventItem[];
-  initialEventId?: string;
+  initialEventIds?: string[];
 }) {
   const formId = useId();
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(
-    initialEventId && events.some((e) => e.id === initialEventId) ? initialEventId : null,
+  const [selectedEventIds, setSelectedEventIds] = useState<string[]>(() =>
+    initialEventIds.filter((id) => events.some((e) => e.id === id)),
   );
   const [diskonTipe, setDiskonTipe] = useState<"persen" | "nominal">("persen");
+  const [diskonNilai, setDiskonNilai] = useState("");
   const [fotoNama, setFotoNama] = useState("");
 
   const [addState, addAction, addPending] = useActionState(addProduct, addProductInitialState);
   const [submitState, submitAction, submitPending] = useActionState(submitPromo, submitInitialState);
 
+  const selectedEvents = useMemo(
+    () => events.filter((e) => selectedEventIds.includes(e.id)),
+    [events, selectedEventIds],
+  );
+  const needsDiskon = selectedEvents.some((e) => e.butuh_diskon);
+  const needsFoto = selectedEvents.some((e) => e.butuh_foto);
+  const hasExtraForm = needsDiskon || needsFoto;
+
+  const canSubmit =
+    selectedProductIds.length > 0 &&
+    selectedEventIds.length > 0 &&
+    (!needsDiskon || diskonNilai.trim() !== "") &&
+    (!needsFoto || fotoNama !== "");
+
   function toggleProduct(id: string) {
     setSelectedProductIds((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
+    );
+  }
+
+  function toggleEvent(id: string) {
+    setSelectedEventIds((prev) =>
+      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id],
     );
   }
 
@@ -122,82 +143,98 @@ export function ProductsView({
               {events.length === 0 && (
                 <p className="lede">Tidak ada event yang bisa diikuti saat ini.</p>
               )}
-              {events.map((event) => (
-                <div className="evt-block" key={event.id}>
-                  <label className="evt-row">
-                    <input
-                      type="radio"
-                      name="event_id_display"
-                      checked={selectedEventId === event.id}
-                      onChange={() => setSelectedEventId(event.id)}
-                    />
-                    <div>
-                      <div className="evt-name">{event.nama}</div>
-                      <div className="evt-meta">
-                        <span className="form-flag">{PLATFORM_LABEL[event.platform]}</span>
+              {events.map((event) => {
+                const needsExtra = event.butuh_diskon || event.butuh_foto;
+                return (
+                  <div className="evt-block" key={event.id}>
+                    <label className="evt-row">
+                      <input
+                        type="checkbox"
+                        checked={selectedEventIds.includes(event.id)}
+                        onChange={() => toggleEvent(event.id)}
+                      />
+                      <div>
+                        <div className="evt-name">{event.nama}</div>
+                        <div className="evt-meta">
+                          <span className="form-flag">{PLATFORM_LABEL[event.platform]}</span>
+                          {needsExtra && (
+                            <span className="form-flag">Butuh data tambahan</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </label>
-                </div>
-              ))}
+                    </label>
+                  </div>
+                );
+              })}
             </div>
-            <input type="hidden" name="event_id" value={selectedEventId ?? ""} />
 
+            {selectedEventIds.map((id) => (
+              <input key={id} type="hidden" name="event_ids" value={id} />
+            ))}
             {selectedProductIds.map((id) => (
               <input key={id} type="hidden" name="product_ids" value={id} />
             ))}
 
-            <div className="global-form">
-              <div className="gf-row">
-                <span className="gf-label">Tipe Diskon</span>
-                <div className="gf-toggle">
-                  <button
-                    type="button"
-                    className={`gf-toggle-btn${diskonTipe === "persen" ? " active" : ""}`}
-                    onClick={() => setDiskonTipe("persen")}
-                  >
-                    Persen
-                  </button>
-                  <button
-                    type="button"
-                    className={`gf-toggle-btn${diskonTipe === "nominal" ? " active" : ""}`}
-                    onClick={() => setDiskonTipe("nominal")}
-                  >
-                    Nominal
-                  </button>
-                </div>
-              </div>
-              <input type="hidden" name="diskon_tipe" value={diskonTipe} />
+            {hasExtraForm && (
+              <div className="global-form">
+                {needsDiskon && (
+                  <>
+                    <div className="gf-row">
+                      <span className="gf-label">Tipe Diskon</span>
+                      <div className="gf-toggle">
+                        <button
+                          type="button"
+                          className={`gf-toggle-btn${diskonTipe === "persen" ? " active" : ""}`}
+                          onClick={() => setDiskonTipe("persen")}
+                        >
+                          Persen
+                        </button>
+                        <button
+                          type="button"
+                          className={`gf-toggle-btn${diskonTipe === "nominal" ? " active" : ""}`}
+                          onClick={() => setDiskonTipe("nominal")}
+                        >
+                          Nominal
+                        </button>
+                      </div>
+                    </div>
+                    <input type="hidden" name="diskon_tipe" value={diskonTipe} />
+                    <input
+                      className="gf-input"
+                      name="diskon_nilai"
+                      type="number"
+                      min={0}
+                      value={diskonNilai}
+                      onChange={(e) => setDiskonNilai(e.target.value)}
+                      placeholder={diskonTipe === "persen" ? "Nilai diskon (%)" : "Nilai diskon (Rp)"}
+                      required
+                    />
+                  </>
+                )}
 
-              <input
-                className="gf-input"
-                name="diskon_nilai"
-                type="number"
-                min={0}
-                placeholder={diskonTipe === "persen" ? "Nilai diskon (%)" : "Nilai diskon (Rp)"}
-                required
-              />
-
-              <div>
-                <label className="gf-label" htmlFor={`${formId}-foto`}>
-                  Foto Promo (opsional)
-                </label>
-                <input
-                  className="gf-input gf-input-file"
-                  id={`${formId}-foto`}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFotoChange}
-                />
+                {needsFoto && (
+                  <div>
+                    <label className="gf-label" htmlFor={`${formId}-foto`}>
+                      Foto Promo
+                    </label>
+                    <input
+                      className="gf-input gf-input-file"
+                      id={`${formId}-foto`}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFotoChange}
+                    />
+                    <input type="hidden" name="foto_nama" value={fotoNama} />
+                  </div>
+                )}
               </div>
-              <input type="hidden" name="foto_nama" value={fotoNama} />
-            </div>
+            )}
 
             {submitState && "error" in submitState && (
               <div className="auth-error show">{submitState.error}</div>
             )}
 
-            <button className="submit-btn" type="submit" disabled={submitPending}>
+            <button className="submit-btn" type="submit" disabled={submitPending || !canSubmit}>
               {submitPending ? "Mengirim..." : "Submit ke Marketplace"}
             </button>
           </form>
@@ -205,10 +242,14 @@ export function ProductsView({
           {submitState && "success" in submitState && (
             <div className="result-card">
               <div className="result-title">Hasil Submit</div>
-              <div className="result-row">
-                <span>Status</span>
-                <strong>{SUBMIT_STATUS_LABEL[submitState.status]}</strong>
-              </div>
+              {submitState.results.map((r) => (
+                <div className="result-row" key={r.eventId}>
+                  <span>
+                    {r.eventName} · {PLATFORM_LABEL[r.platform]}
+                  </span>
+                  <strong>{SUBMIT_STATUS_LABEL[r.status]}</strong>
+                </div>
+              ))}
             </div>
           )}
         </div>

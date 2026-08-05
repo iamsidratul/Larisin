@@ -10,6 +10,8 @@ export const EVENTS: EventItem[] = [
     selesai: "2026-07-10",
     syarat: "Produk wajib memiliki stok minimal 10 unit dan diskon minimal 10% dari harga normal.",
     link: "#",
+    butuh_diskon: true,
+    butuh_foto: false,
   },
   {
     id: "shopee-payday-sale",
@@ -20,6 +22,8 @@ export const EVENTS: EventItem[] = [
     selesai: "2026-08-05",
     syarat: "Toko wajib mengaktifkan Gratis Ongkir Xtra dan memiliki rating minimal 4.5.",
     link: "#",
+    butuh_diskon: false,
+    butuh_foto: false,
   },
   {
     id: "tokopedia-flash-sale-mingguan",
@@ -30,6 +34,8 @@ export const EVENTS: EventItem[] = [
     selesai: "2026-08-01",
     syarat: "Kuota stok flash sale minimal 20 unit per produk, harga coret wajib diisi.",
     link: "#",
+    butuh_diskon: true,
+    butuh_foto: false,
   },
   {
     id: "tokopedia-wib-sale",
@@ -40,6 +46,8 @@ export const EVENTS: EventItem[] = [
     selesai: "2026-08-20",
     syarat: "Wajib menyediakan voucher toko minimal 10% dan mengikuti tema bundling event.",
     link: "#",
+    butuh_diskon: true,
+    butuh_foto: true,
   },
   {
     id: "tiktok-live-mega-sale",
@@ -50,6 +58,8 @@ export const EVENTS: EventItem[] = [
     selesai: "2026-08-10",
     syarat: "Toko wajib melakukan minimal 2 sesi LIVE selama periode event dengan durasi 1 jam per sesi.",
     link: "#",
+    butuh_diskon: false,
+    butuh_foto: false,
   },
   {
     id: "tiktok-777-sale",
@@ -60,5 +70,7 @@ export const EVENTS: EventItem[] = [
     selesai: "2026-07-08",
     syarat: "Produk harus terdaftar di katalog resmi TikTok Shop minimal 7 hari sebelum event.",
     link: "#",
+    butuh_diskon: false,
+    butuh_foto: true,
   },
 ];

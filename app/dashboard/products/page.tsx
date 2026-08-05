@@ -32,7 +32,7 @@ export default async function ProductsPage({
     <ProductsView
       products={(products ?? []) as Product[]}
       events={availableEvents}
-      initialEventId={event}
+      initialEventIds={event ? [event] : []}
     />
   );
 }

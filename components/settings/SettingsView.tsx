@@ -1,18 +1,39 @@
 "use client";
 
 import { useActionState } from "react";
-import type { Profile } from "@/lib/types";
+import type { MarketplaceConnection, Profile } from "@/lib/types";
 import {
   updateProfile,
   updatePassword,
   type ProfileFormState,
   type PasswordFormState,
 } from "@/lib/actions/profile";
+import { disconnectTikTokShop } from "@/lib/actions/marketplace";
 
 const profileInitialState: ProfileFormState = null;
 const passwordInitialState: PasswordFormState = null;
 
-export function SettingsView({ profile, email }: { profile: Profile; email: string }) {
+const TIKTOK_ERROR_MESSAGES: Record<string, string> = {
+  state_mismatch: "Sesi otorisasi tidak valid atau kedaluwarsa. Coba hubungkan lagi.",
+  unauthenticated: "Sesi berakhir, silakan masuk kembali lalu coba hubungkan lagi.",
+  token_exchange_failed: "Gagal menukar kode otorisasi dari TikTok Shop.",
+  save_failed: "Gagal menyimpan koneksi ke database.",
+  config_missing: "Integrasi TikTok Shop belum dikonfigurasi (env var App Key/Redirect URI kosong).",
+};
+
+export function SettingsView({
+  profile,
+  email,
+  tiktokConnection,
+  tiktokConnected,
+  tiktokError,
+}: {
+  profile: Profile;
+  email: string;
+  tiktokConnection: MarketplaceConnection | null;
+  tiktokConnected: boolean;
+  tiktokError: string | null;
+}) {
   const [profileState, profileAction, profilePending] = useActionState(
     updateProfile,
     profileInitialState,
@@ -22,11 +43,60 @@ export function SettingsView({ profile, email }: { profile: Profile; email: stri
     passwordInitialState,
   );
 
+  const isConnected = tiktokConnection?.status === "connected";
+
   return (
     <>
       <div className="pagehead">
         <h1>Pengaturan Akun</h1>
         <p className="lede">Kelola informasi akun dan kata sandi kamu.</p>
+      </div>
+
+      <div style={{ maxWidth: 480, marginBottom: 28 }}>
+        <div className="panel-label">Koneksi Marketplace</div>
+
+        {tiktokConnected && (
+          <div className="result-card">
+            <div className="result-row">
+              <span>TikTok Shop berhasil terhubung.</span>
+            </div>
+          </div>
+        )}
+        {tiktokError && (
+          <div className="auth-error show">
+            {TIKTOK_ERROR_MESSAGES[tiktokError] ?? "Gagal menghubungkan TikTok Shop."}
+          </div>
+        )}
+
+        <div className="result-card">
+          <div className="result-row">
+            <span>TikTok Shop</span>
+            {isConnected ? (
+              <span>
+                Terhubung sejak{" "}
+                {new Date(tiktokConnection!.connected_at).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
+            ) : (
+              <span>Belum terhubung</span>
+            )}
+          </div>
+        </div>
+
+        {isConnected ? (
+          <form action={disconnectTikTokShop}>
+            <button className="submit-btn" type="submit" style={{ background: "#C0392B" }}>
+              Putuskan Koneksi
+            </button>
+          </form>
+        ) : (
+          <a className="submit-btn" href="/api/auth/tiktok/connect" style={{ display: "inline-block", textDecoration: "none" }}>
+            Hubungkan TikTok Shop
+          </a>
+        )}
       </div>
 
       <div className="submit-layout">

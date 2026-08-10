@@ -33,6 +33,18 @@ export interface Product {
   dibuat_pada: string;
 }
 
+export type MarketplaceConnectionStatus = "connected" | "expired" | "revoked";
+
+export interface MarketplaceConnection {
+  id: string;
+  user_id: string;
+  platform: Platform;
+  shop_id: string | null;
+  status: MarketplaceConnectionStatus;
+  connected_at: string;
+  updated_at: string;
+}
+
 export interface Submission {
   id: string;
   user_id: string;

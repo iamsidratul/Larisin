@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -31,7 +32,13 @@ export function Sidebar() {
   return (
     <aside className={`sidebar${open ? " open" : ""}`}>
       <div className="brand">
-        <div className="brand-mark">PP</div>
+        <Image
+          src="/LogoLarisin.png"
+          alt="Larisin"
+          width={34}
+          height={34}
+          className="brand-mark"
+        />
         <div>
           <div className="brand-name">Papan Promo</div>
           <div className="brand-sub">Dashboard Event</div>

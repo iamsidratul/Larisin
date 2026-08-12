@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { CSSProperties } from "react";
 
 const TICKETS: {
@@ -16,7 +17,13 @@ export function AuthVisual() {
   return (
     <div className="auth-visual">
       <div className="brand">
-        <div className="brand-mark">PP</div>
+        <Image
+          src="/LogoLarisin.png"
+          alt="Larisin"
+          width={28}
+          height={28}
+          className="brand-mark"
+        />
         <div>
           <div className="brand-name">Papan Promo</div>
         </div>

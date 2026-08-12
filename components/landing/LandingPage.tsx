@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
@@ -31,7 +32,13 @@ export function LandingPage() {
     <div className="lp-shell">
       <header className="lp-nav">
         <div className="lp-nav-brand">
-          <div className="brand-mark">PP</div>
+          <Image
+            src="/LogoLarisin.png"
+            alt="Larisin"
+            width={34}
+            height={34}
+            className="brand-mark"
+          />
           <div className="brand-name" style={{ color: "var(--ink)" }}>
             Larisin
           </div>
@@ -137,9 +144,14 @@ export function LandingPage() {
       </section>
 
       <footer className="lp-footer">
-        <div className="brand-mark" style={{ margin: "0 auto 10px" }}>
-          PP
-        </div>
+        <Image
+          src="/LogoLarisin.png"
+          alt="Larisin"
+          width={34}
+          height={34}
+          className="brand-mark"
+          style={{ margin: "0 auto 10px" }}
+        />
         <div style={{ fontWeight: 700, color: "var(--ink)" }}>Larisin</div>
         <p>Satu papan, semua lapak.</p>
       </footer>

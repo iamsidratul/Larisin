@@ -327,6 +327,14 @@ footer{ text-align:center; margin-top:50px; font-size:12px; color: var(--ink-sof
 .prod-name{ font-size:13px; font-weight:600; }
 .prod-meta{ font-size:11px; color: var(--ink-soft); font-family: var(--font-jetbrains-mono), monospace; margin-top:2px; }
 
+.prod-badge{
+  display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:600;
+  padding:2px 8px; border-radius:999px; border:1px solid var(--line); color: var(--ink-soft);
+  margin-left:8px; vertical-align:middle;
+}
+.prod-badge .swatch{ width:6px; height:6px; border-radius:50%; }
+.prod-badge[data-platform="tiktokshop"] .swatch{ background: var(--tiktok-accent); }
+
 /* New: per-row delete + inline add-product form (the approved design has 4
    hardcoded products and no add/delete UI at all; since products are now
    real per-account rows a way to add/remove them is required — added using

@@ -18,11 +18,19 @@ export default async function ProductsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: products } = await supabase
-    .from("products")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("dibuat_pada", { ascending: false });
+  const [{ data: products }, { data: tiktokConnection }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("dibuat_pada", { ascending: false }),
+    supabase
+      .from("marketplace_connections")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .eq("platform", "tiktokshop")
+      .maybeSingle(),
+  ]);
 
   const availableEvents = EVENTS.filter(
     (e) => getEventStatus(e.mulai, e.selesai) !== "berakhir",
@@ -33,6 +41,7 @@ export default async function ProductsPage({
       products={(products ?? []) as Product[]}
       events={availableEvents}
       initialEventIds={event ? [event] : []}
+      tiktokConnected={tiktokConnection?.status === "connected"}
     />
   );
 }

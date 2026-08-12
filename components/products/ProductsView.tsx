@@ -2,10 +2,13 @@
 
 import { useActionState, useId, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import type { EventItem, Product } from "@/lib/types";
 import { PLATFORM_LABEL } from "@/lib/status";
 import { addProduct, deleteProduct, type ProductFormState } from "@/lib/actions/products";
 import { submitPromo, type SubmitState } from "@/lib/actions/submissions";
+
+type SyncResult = { synced: number } | { error: string };
 
 const addProductInitialState: ProductFormState = null;
 const submitInitialState: SubmitState = null;
@@ -20,12 +23,17 @@ export function ProductsView({
   products,
   events,
   initialEventIds = [],
+  tiktokConnected = false,
 }: {
   products: Product[];
   events: EventItem[];
   initialEventIds?: string[];
+  tiktokConnected?: boolean;
 }) {
+  const router = useRouter();
   const formId = useId();
+  const [syncPending, setSyncPending] = useState(false);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>(() =>
     initialEventIds.filter((id) => events.some((e) => e.id === id)),
@@ -67,6 +75,25 @@ export function ProductsView({
     setFotoNama(e.target.files?.[0]?.name ?? "");
   }
 
+  async function handleSync() {
+    setSyncPending(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/tiktok/products/sync", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) {
+        setSyncResult({ error: json.message || "Gagal menarik produk dari TikTok Shop." });
+      } else {
+        setSyncResult({ synced: json.synced });
+        router.refresh();
+      }
+    } catch {
+      setSyncResult({ error: "Gagal menarik produk dari TikTok Shop." });
+    } finally {
+      setSyncPending(false);
+    }
+  }
+
   return (
     <>
       <div className="pagehead">
@@ -79,6 +106,29 @@ export function ProductsView({
       <div className="submit-layout">
         <div>
           <div className="panel-label">Daftar Produk</div>
+
+          {tiktokConnected && (
+            <div style={{ marginBottom: 16 }}>
+              <button
+                type="button"
+                className="submit-btn"
+                onClick={handleSync}
+                disabled={syncPending}
+              >
+                {syncPending ? "Menarik produk..." : "Tarik Produk dari TikTok Shop"}
+              </button>
+              {syncResult && "error" in syncResult && (
+                <div className="auth-error show">{syncResult.error}</div>
+              )}
+              {syncResult && "synced" in syncResult && (
+                <div className="result-card">
+                  <div className="result-row">
+                    <span>{syncResult.synced} produk berhasil ditarik dari TikTok Shop.</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <form action={addAction} className="add-prod-form">
             <div className="add-prod-row">
@@ -119,7 +169,14 @@ export function ProductsView({
                   aria-label={`Pilih ${product.nama}`}
                 />
                 <div>
-                  <div className="prod-name">{product.nama}</div>
+                  <div className="prod-name">
+                    {product.nama}
+                    {product.source !== "manual" && (
+                      <span className="prod-badge" data-platform="tiktokshop">
+                        <span className="swatch" /> TikTok Shop
+                      </span>
+                    )}
+                  </div>
                   <div className="prod-meta">
                     {product.sku ? `SKU: ${product.sku} · ` : ""}Stok: {product.stok}
                   </div>

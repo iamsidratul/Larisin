@@ -24,6 +24,8 @@ export interface Profile {
   dibuat_pada: string;
 }
 
+export type ProductSource = "manual" | "tiktok_sync" | "shopee_sync" | "tokopedia_sync";
+
 export interface Product {
   id: string;
   user_id: string;
@@ -31,6 +33,10 @@ export interface Product {
   sku: string | null;
   stok: number;
   dibuat_pada: string;
+  source: ProductSource;
+  platform_product_id: string | null;
+  marketplace_connection_id: string | null;
+  last_synced_at: string | null;
 }
 
 export type MarketplaceConnectionStatus = "connected" | "expired" | "revoked";

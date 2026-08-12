@@ -111,3 +111,63 @@ export async function fetchAuthorizedShops(accessToken: string): Promise<TikTokS
 
   return json.data.shops;
 }
+
+interface TikTokProductSku {
+  id: string;
+  seller_sku: string;
+  inventory: Array<{ warehouse_id: string; quantity: number }>;
+}
+
+interface TikTokProduct {
+  id: string;
+  product_name: string;
+  status: string;
+  skus: TikTokProductSku[];
+}
+
+interface TikTokProductSearchResponse {
+  code: number;
+  message: string;
+  data: {
+    products: TikTokProduct[];
+    next_page_token?: string;
+    total_count?: number;
+  };
+}
+
+export async function fetchTikTokProducts(
+  accessToken: string,
+  shopCipher: string,
+  pageSize = 100,
+  pageToken?: string,
+): Promise<{ products: TikTokProduct[]; nextPageToken: string | null }> {
+  const path = "/product/202309/products/search";
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const params: Record<string, string> = {
+    app_key: process.env.TIKTOK_APP_KEY!,
+    shop_cipher: shopCipher,
+    timestamp,
+    page_size: String(pageSize),
+    ...(pageToken ? { page_token: pageToken } : {}),
+  };
+  const sign = signTikTokRequest(path, params);
+
+  const url = new URL(path, API_BASE);
+  Object.entries({ ...params, sign }).forEach(([key, value]) => url.searchParams.set(key, value));
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "x-tts-access-token": accessToken, "content-type": "application/json" },
+    body: JSON.stringify({}),
+  });
+  const json = (await res.json()) as TikTokProductSearchResponse;
+
+  if (!res.ok || json.code !== 0) {
+    throw new Error(json.message || "Gagal mengambil daftar produk dari TikTok Shop.");
+  }
+
+  return {
+    products: json.data.products,
+    nextPageToken: json.data.next_page_token || null,
+  };
+}

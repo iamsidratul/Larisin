@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Papan Promo — Dashboard Event Marketplace",
+  title: "Larisin — Dashboard Event Marketplace",
   description: "Satu papan, semua lapak — pantau event & promo lintas marketplace.",
 };
 

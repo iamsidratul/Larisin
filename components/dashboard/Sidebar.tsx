@@ -40,7 +40,7 @@ export function Sidebar() {
           className="brand-mark"
         />
         <div>
-          <div className="brand-name">Papan Promo</div>
+          <div className="brand-name">Larisin</div>
           <div className="brand-sub">Dashboard Event</div>
         </div>
       </div>

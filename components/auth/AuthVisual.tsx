@@ -25,7 +25,7 @@ export function AuthVisual() {
           className="brand-mark"
         />
         <div>
-          <div className="brand-name">Papan Promo</div>
+          <div className="brand-name">Larisin</div>
         </div>
       </div>
 

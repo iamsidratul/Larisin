@@ -30,6 +30,16 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  // API routes handle their own auth (each one calls createClient() +
+  // getUser() itself) — e.g. the TikTok OAuth callback must stay reachable
+  // even when the browser has no Larisin session yet, since the redirect
+  // back from TikTok often arrives before the seller has ever logged in
+  // to Larisin in that browser.
+  if (path.startsWith("/api/")) {
+    return response;
+  }
+
   const isPublic = PUBLIC_PATHS.includes(path);
 
   if (!user && !isPublic) {

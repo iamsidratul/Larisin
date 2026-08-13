@@ -58,7 +58,7 @@ export async function POST() {
   const nowIso = new Date().toISOString();
   const rows = allProducts.map((p) => ({
     user_id: user.id,
-    nama: p.product_name,
+    nama: p.title,
     sku: p.skus[0]?.seller_sku ?? null,
     stok: p.skus.reduce((sum, sku) => sum + (sku.inventory?.[0]?.quantity ?? 0), 0),
     source: "tiktok_sync" as const,

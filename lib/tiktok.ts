@@ -123,7 +123,7 @@ interface TikTokProductSku {
 
 interface TikTokProduct {
   id: string;
-  product_name: string;
+  title: string;
   status: string;
   skus: TikTokProductSku[];
 }

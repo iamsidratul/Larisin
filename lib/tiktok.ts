@@ -171,7 +171,7 @@ export async function fetchTikTokProducts(
   }
 
   return {
-    products: json.data.products,
+    products: json.data.products ?? [],
     nextPageToken: json.data.next_page_token || null,
   };
 }

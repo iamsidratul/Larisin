@@ -67,12 +67,15 @@ export async function refreshTikTokToken(refreshToken: string): Promise<TikTokTo
 }
 
 // TikTok Shop menandatangani tiap request API (selain endpoint token) dengan
-// HMAC-SHA256: key & pesan sama-sama app_secret, dibungkus di kedua ujung path+params.
-function signTikTokRequest(path: string, params: Record<string, string>): string {
+// HMAC-SHA256: key & pesan sama-sama app_secret, dibungkus di kedua ujung
+// path+params. Untuk request dengan body JSON (POST), body-nya ikut masuk
+// ke tengah sebelum app_secret penutup — tanpa ini TikTok balikin "invalid
+// sign" walau params & path-nya udah benar.
+function signTikTokRequest(path: string, params: Record<string, string>, bodyStr = ""): string {
   const appSecret = process.env.TIKTOK_APP_SECRET!;
   const sortedKeys = Object.keys(params).sort();
   const paramString = sortedKeys.map((key) => `${key}${params[key]}`).join("");
-  const base = `${appSecret}${path}${paramString}${appSecret}`;
+  const base = `${appSecret}${path}${paramString}${bodyStr}${appSecret}`;
   return createHmac("sha256", appSecret).update(base).digest("hex");
 }
 
@@ -150,7 +153,8 @@ export async function fetchTikTokProducts(
     page_size: String(pageSize),
     ...(pageToken ? { page_token: pageToken } : {}),
   };
-  const sign = signTikTokRequest(path, params);
+  const bodyStr = JSON.stringify({});
+  const sign = signTikTokRequest(path, params, bodyStr);
 
   const url = new URL(path, API_BASE);
   Object.entries({ ...params, sign }).forEach(([key, value]) => url.searchParams.set(key, value));
@@ -158,7 +162,7 @@ export async function fetchTikTokProducts(
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: { "x-tts-access-token": accessToken, "content-type": "application/json" },
-    body: JSON.stringify({}),
+    body: bodyStr,
   });
   const json = (await res.json()) as TikTokProductSearchResponse;
 

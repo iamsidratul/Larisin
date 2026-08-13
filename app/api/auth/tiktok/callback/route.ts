@@ -18,11 +18,6 @@ export async function GET(request: NextRequest) {
   const cookieState = request.cookies.get("tiktok_oauth_state")?.value;
 
   if (!code || !state || !cookieState || state !== cookieState) {
-    // TEMPORARY DEBUG: surface the raw code so it can be exchanged manually
-    // when this callback is reached from TikTok's own sandbox "Authorize
-    // app" flow (no state cookie exists since /connect was never visited).
-    // Remove once sandbox evidence-gathering is done.
-    if (code) settingsUrl.searchParams.set("debug_code", code);
     return fail("state_mismatch");
   }
 

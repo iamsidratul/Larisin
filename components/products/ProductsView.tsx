@@ -179,6 +179,7 @@ export function ProductsView({
                   </div>
                   <div className="prod-meta">
                     {product.sku ? `SKU: ${product.sku} · ` : ""}Stok: {product.stok}
+                    {product.platform_product_id && ` · ID TikTok Shop: ${product.platform_product_id}`}
                   </div>
                 </div>
                 <form action={deleteProduct} onClick={(e) => e.stopPropagation()}>

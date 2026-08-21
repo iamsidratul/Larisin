@@ -18,7 +18,7 @@ export default async function ProductsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: products }, { data: tiktokConnection }] = await Promise.all([
+  const [{ data: products }, { data: tiktokConnections }] = await Promise.all([
     supabase
       .from("products")
       .select("*")
@@ -26,7 +26,7 @@ export default async function ProductsPage({
       .order("dibuat_pada", { ascending: false }),
     supabase
       .from("marketplace_connections")
-      .select("id, status")
+      .select("id, shop_id, shop_code, shop_name, status")
       .eq("user_id", user.id)
       .eq("platform", "tiktokshop")
       .eq("status", "connected"),
@@ -36,12 +36,18 @@ export default async function ProductsPage({
     (e) => getEventStatus(e.mulai, e.selesai) !== "berakhir",
   );
 
+  const shopLabels: Record<string, string> = {};
+  for (const conn of tiktokConnections ?? []) {
+    shopLabels[conn.id] = conn.shop_name || conn.shop_code || conn.shop_id || "Toko TikTok Shop";
+  }
+
   return (
     <ProductsView
       products={(products ?? []) as Product[]}
       events={availableEvents}
       initialEventIds={event ? [event] : []}
-      tiktokConnected={(tiktokConnection ?? []).length > 0}
+      tiktokConnected={(tiktokConnections ?? []).length > 0}
+      shopLabels={shopLabels}
     />
   );
 }

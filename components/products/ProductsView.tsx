@@ -24,11 +24,13 @@ export function ProductsView({
   events,
   initialEventIds = [],
   tiktokConnected = false,
+  shopLabels = {},
 }: {
   products: Product[];
   events: EventItem[];
   initialEventIds?: string[];
   tiktokConnected?: boolean;
+  shopLabels?: Record<string, string>;
 }) {
   const router = useRouter();
   const formId = useId();
@@ -44,6 +46,22 @@ export function ProductsView({
 
   const [addState, addAction, addPending] = useActionState(addProduct, addProductInitialState);
   const [submitState, submitAction, submitPending] = useActionState(submitPromo, submitInitialState);
+
+  const productGroups = useMemo(() => {
+    const groups = new Map<string, { label: string; items: Product[] }>();
+    for (const product of products) {
+      const key = product.source === "manual" ? "manual" : product.marketplace_connection_id ?? "unknown";
+      if (!groups.has(key)) {
+        const label =
+          product.source === "manual"
+            ? "Produk Manual"
+            : shopLabels[product.marketplace_connection_id ?? ""] ?? "TikTok Shop";
+        groups.set(key, { label, items: [] });
+      }
+      groups.get(key)!.items.push(product);
+    }
+    return Array.from(groups.values());
+  }, [products, shopLabels]);
 
   const selectedEvents = useMemo(
     () => events.filter((e) => selectedEventIds.includes(e.id)),
@@ -151,46 +169,49 @@ export function ProductsView({
             </button>
           </form>
 
-          <div className="prod-list">
-            {products.length === 0 && (
-              <p className="lede">Belum ada produk. Tambahkan produk pertamamu di atas.</p>
-            )}
-            {products.map((product) => (
-              <div
-                className="prod-row"
-                key={product.id}
-                onClick={() => toggleProduct(product.id)}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedProductIds.includes(product.id)}
-                  onChange={() => toggleProduct(product.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label={`Pilih ${product.nama}`}
-                />
-                <div>
-                  <div className="prod-name">
-                    {product.nama}
-                    {product.source !== "manual" && (
-                      <span className="prod-badge" data-platform="tiktokshop">
-                        <span className="swatch" /> TikTok Shop
-                      </span>
-                    )}
-                  </div>
-                  <div className="prod-meta">
-                    {product.sku ? `SKU: ${product.sku} · ` : ""}Stok: {product.stok}
-                    {product.platform_product_id && ` · ID TikTok Shop: ${product.platform_product_id}`}
-                  </div>
-                </div>
-                <form action={deleteProduct} onClick={(e) => e.stopPropagation()}>
-                  <input type="hidden" name="id" value={product.id} />
-                  <button type="submit" className="prod-del" aria-label={`Hapus ${product.nama}`}>
-                    ✕
-                  </button>
-                </form>
+          {products.length === 0 && (
+            <p className="lede">Belum ada produk. Tambahkan produk pertamamu di atas.</p>
+          )}
+
+          {productGroups.map((group) => (
+            <div className="section" key={group.label}>
+              <div className="section-head">
+                <div className="section-title">{group.label}</div>
+                <span className="section-count">{group.items.length}</span>
+                <div className="section-line" />
               </div>
-            ))}
-          </div>
+              <div className="prod-list">
+                {group.items.map((product) => (
+                  <div
+                    className="prod-row"
+                    key={product.id}
+                    onClick={() => toggleProduct(product.id)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedProductIds.includes(product.id)}
+                      onChange={() => toggleProduct(product.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Pilih ${product.nama}`}
+                    />
+                    <div>
+                      <div className="prod-name">{product.nama}</div>
+                      <div className="prod-meta">
+                        {product.sku ? `SKU: ${product.sku} · ` : ""}Stok: {product.stok}
+                        {product.platform_product_id && ` · ID: ${product.platform_product_id}`}
+                      </div>
+                    </div>
+                    <form action={deleteProduct} onClick={(e) => e.stopPropagation()}>
+                      <input type="hidden" name="id" value={product.id} />
+                      <button type="submit" className="prod-del" aria-label={`Hapus ${product.nama}`}>
+                        ✕
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div>

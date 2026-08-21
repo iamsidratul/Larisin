@@ -189,22 +189,24 @@ interface TikTokPromotionSearchResponse {
   code: number;
   message: string;
   data: {
-    promotions: TikTokPromotion[];
+    activities: TikTokPromotion[];
     next_page_token?: string;
     total_count?: number;
   };
 }
 
-// Best-effort endpoint (same family/version as products/search) — verify
-// path, method, and field names against a real sandbox response before
-// trusting this in production, same caveat as fetchTikTokProducts.
+// Confirmed via Partner Center's API Testing Tool: "Search Promotion
+// Activities" — note it's /activities/search, not /promotions/search, and
+// the response key is "activities". Field names inside each activity
+// (title, begin_time, end_time, etc.) are still a best-effort guess and may
+// need adjusting once tested against a real response.
 export async function fetchTikTokPromotions(
   accessToken: string,
   shopCipher: string,
   pageSize = 100,
   pageToken?: string,
 ): Promise<{ promotions: TikTokPromotion[]; nextPageToken: string | null }> {
-  const path = "/promotion/202309/promotions/search";
+  const path = "/promotion/202309/activities/search";
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const params: Record<string, string> = {
     app_key: process.env.TIKTOK_APP_KEY!,
@@ -231,7 +233,7 @@ export async function fetchTikTokPromotions(
   }
 
   return {
-    promotions: json.data.promotions ?? [],
+    promotions: json.data.activities ?? [],
     nextPageToken: json.data.next_page_token || null,
   };
 }

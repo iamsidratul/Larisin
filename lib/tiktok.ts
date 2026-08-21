@@ -212,10 +212,14 @@ export async function fetchTikTokPromotions(
     app_key: process.env.TIKTOK_APP_KEY!,
     shop_cipher: shopCipher,
     timestamp,
-    page_size: String(pageSize),
-    ...(pageToken ? { page_token: pageToken } : {}),
   };
-  const bodyStr = JSON.stringify({});
+  // Unlike products/search, this endpoint strictly type-checks page_size as
+  // an int32 in the JSON body — sending it as a query string (even "100")
+  // gets rejected with "expected type:int32".
+  const bodyStr = JSON.stringify({
+    page_size: pageSize,
+    ...(pageToken ? { page_token: pageToken } : {}),
+  });
   const sign = signTikTokRequest(path, params, bodyStr);
 
   const url = new URL(path, API_BASE);

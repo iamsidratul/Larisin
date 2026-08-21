@@ -36,6 +36,8 @@ export function ProductsView({
   const formId = useId();
   const [syncPending, setSyncPending] = useState(false);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [search, setSearch] = useState("");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>(() =>
     initialEventIds.filter((id) => events.some((e) => e.id === id)),
@@ -48,20 +50,38 @@ export function ProductsView({
   const [submitState, submitAction, submitPending] = useActionState(submitPromo, submitInitialState);
 
   const productGroups = useMemo(() => {
-    const groups = new Map<string, { label: string; items: Product[] }>();
-    for (const product of products) {
+    const query = search.trim().toLowerCase();
+    const filtered = query
+      ? products.filter(
+          (p) =>
+            p.nama.toLowerCase().includes(query) ||
+            (p.sku ?? "").toLowerCase().includes(query),
+        )
+      : products;
+
+    const groups = new Map<string, { key: string; label: string; items: Product[] }>();
+    for (const product of filtered) {
       const key = product.source === "manual" ? "manual" : product.marketplace_connection_id ?? "unknown";
       if (!groups.has(key)) {
         const label =
           product.source === "manual"
             ? "Produk Manual"
             : shopLabels[product.marketplace_connection_id ?? ""] ?? "TikTok Shop";
-        groups.set(key, { label, items: [] });
+        groups.set(key, { key, label, items: [] });
       }
       groups.get(key)!.items.push(product);
     }
     return Array.from(groups.values());
-  }, [products, shopLabels]);
+  }, [products, shopLabels, search]);
+
+  function toggleGroupCollapsed(key: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   const selectedEvents = useMemo(
     () => events.filter((e) => selectedEventIds.includes(e.id)),
@@ -173,45 +193,70 @@ export function ProductsView({
             <p className="lede">Belum ada produk. Tambahkan produk pertamamu di atas.</p>
           )}
 
-          {productGroups.map((group) => (
-            <div className="section" key={group.label}>
-              <div className="section-head">
-                <div className="section-title">{group.label}</div>
-                <span className="section-count">{group.items.length}</span>
-                <div className="section-line" />
-              </div>
-              <div className="prod-list">
-                {group.items.map((product) => (
-                  <div
-                    className="prod-row"
-                    key={product.id}
-                    onClick={() => toggleProduct(product.id)}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedProductIds.includes(product.id)}
-                      onChange={() => toggleProduct(product.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`Pilih ${product.nama}`}
-                    />
-                    <div>
-                      <div className="prod-name">{product.nama}</div>
-                      <div className="prod-meta">
-                        {product.sku ? `SKU: ${product.sku} · ` : ""}Stok: {product.stok}
-                        {product.platform_product_id && ` · ID: ${product.platform_product_id}`}
+          {products.length > 5 && (
+            <input
+              className="gf-input prod-search"
+              type="search"
+              placeholder="Cari produk atau SKU..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          )}
+
+          {productGroups.length === 0 && search && (
+            <p className="lede">Tidak ada produk yang cocok dengan &quot;{search}&quot;.</p>
+          )}
+
+          {productGroups.map((group) => {
+            const collapsed = collapsedGroups.has(group.key);
+            return (
+              <div className="section" key={group.key}>
+                <div
+                  className="section-head collapsible"
+                  onClick={() => toggleGroupCollapsed(group.key)}
+                >
+                  <span className={`section-chevron${collapsed ? "" : " open"}`}>▶</span>
+                  <div className="section-title">{group.label}</div>
+                  <span className="section-count">{group.items.length}</span>
+                  <div className="section-line" />
+                </div>
+                {!collapsed && (
+                  <div className="prod-list">
+                    {group.items.map((product) => (
+                      <div
+                        className="prod-row"
+                        key={product.id}
+                        onClick={() => toggleProduct(product.id)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedProductIds.includes(product.id)}
+                          onChange={() => toggleProduct(product.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Pilih ${product.nama}`}
+                        />
+                        <div className="prod-row-info">
+                          <div className="prod-name" title={product.nama}>
+                            {product.nama}
+                          </div>
+                          <div className="prod-meta">
+                            {product.sku ? `SKU: ${product.sku} · ` : ""}Stok: {product.stok}
+                            {product.platform_product_id && ` · ID: ${product.platform_product_id}`}
+                          </div>
+                        </div>
+                        <form action={deleteProduct} onClick={(e) => e.stopPropagation()}>
+                          <input type="hidden" name="id" value={product.id} />
+                          <button type="submit" className="prod-del" aria-label={`Hapus ${product.nama}`}>
+                            ✕
+                          </button>
+                        </form>
                       </div>
-                    </div>
-                    <form action={deleteProduct} onClick={(e) => e.stopPropagation()}>
-                      <input type="hidden" name="id" value={product.id} />
-                      <button type="submit" className="prod-del" aria-label={`Hapus ${product.nama}`}>
-                        ✕
-                      </button>
-                    </form>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div>

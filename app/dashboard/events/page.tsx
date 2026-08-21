@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EventsView } from "@/components/events/EventsView";
-import { EVENTS } from "@/lib/data/events";
 import type { EventItem } from "@/lib/types";
 
 export default async function EventsPage() {
@@ -21,7 +20,7 @@ export default async function EventsPage() {
       .maybeSingle(),
   ]);
 
-  const tiktokEvents: EventItem[] = (dbEvents ?? []).map((e) => ({
+  const events: EventItem[] = (dbEvents ?? []).map((e) => ({
     id: e.id,
     platform: e.platform,
     nama: e.nama,
@@ -34,9 +33,6 @@ export default async function EventsPage() {
     butuh_foto: e.butuh_foto,
     source: e.source,
   }));
-
-  const staticEvents = EVENTS.filter((e) => e.platform !== "tiktokshop");
-  const events = [...staticEvents, ...tiktokEvents];
 
   return (
     <EventsView events={events} tiktokConnected={connection?.status === "connected"} />

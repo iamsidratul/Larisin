@@ -51,12 +51,28 @@ export async function POST() {
     );
   }
 
-  if (allPromotions.length === 0) {
+  // Only ongoing/upcoming campaigns are worth showing — a seller can't act
+  // on one that's already over, and TikTok returns large volumes of expired
+  // flash-sale style activities that would otherwise flood the list.
+  const now = Date.now();
+  const activePromotions = allPromotions.filter((p) => p.end_time * 1000 >= now);
+
+  // Clean up previously-synced campaigns for this connection that have since
+  // ended, so a re-sync always reflects current reality rather than
+  // accumulating stale rows indefinitely.
+  await supabase
+    .from("events")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("marketplace_connection_id", connection.id)
+    .lt("selesai", new Date(now).toISOString());
+
+  if (activePromotions.length === 0) {
     return NextResponse.json({ synced: 0 });
   }
 
-  const nowIso = new Date().toISOString();
-  const rows = allPromotions.map((p) => ({
+  const nowIso = new Date(now).toISOString();
+  const rows = activePromotions.map((p) => ({
     user_id: user.id,
     platform: "tiktokshop" as const,
     nama: p.title,

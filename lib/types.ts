@@ -4,6 +4,8 @@ export type EventStatus = "akan_datang" | "berlangsung" | "berakhir";
 
 export type SubmissionStatus = "berhasil" | "pending" | "gagal";
 
+export type EventSource = "manual_curated" | "tiktok_api";
+
 export interface EventItem {
   id: string;
   platform: Platform;
@@ -15,6 +17,7 @@ export interface EventItem {
   link: string;
   butuh_diskon: boolean;
   butuh_foto: boolean;
+  source?: EventSource;
 }
 
 export interface Profile {

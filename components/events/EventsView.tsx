@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { EventItem, EventStatus, Platform } from "@/lib/types";
 import {
   formatCountdown,
@@ -20,10 +21,40 @@ const PLATFORM_FILTERS: { key: Platform; label: string }[] = [
 
 const STATUS_ORDER: EventStatus[] = ["berlangsung", "akan_datang", "berakhir"];
 
-export function EventsView({ events }: { events: EventItem[] }) {
+type SyncResult = { synced: number } | { error: string };
+
+export function EventsView({
+  events,
+  tiktokConnected = false,
+}: {
+  events: EventItem[];
+  tiktokConnected?: boolean;
+}) {
+  const router = useRouter();
   const [platformFilter, setPlatformFilter] = useState<Platform | "semua">("semua");
   const [statusFilter, setStatusFilter] = useState<EventStatus | "semua">("semua");
   const [selected, setSelected] = useState<EventItem | null>(null);
+  const [syncPending, setSyncPending] = useState(false);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+
+  async function handleSync() {
+    setSyncPending(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/tiktok/promotions/list", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) {
+        setSyncResult({ error: json.message || "Gagal menarik promosi dari TikTok Shop." });
+      } else {
+        setSyncResult({ synced: json.synced });
+        router.refresh();
+      }
+    } catch {
+      setSyncResult({ error: "Gagal menarik promosi dari TikTok Shop." });
+    } finally {
+      setSyncPending(false);
+    }
+  }
 
   const now = useMemo(() => new Date(), []);
 
@@ -80,6 +111,30 @@ export function EventsView({ events }: { events: EventItem[] }) {
           </div>
         </div>
       </div>
+
+      {tiktokConnected && (
+        <div style={{ marginBottom: 16 }}>
+          <button
+            type="button"
+            className="submit-btn"
+            style={{ marginTop: 0 }}
+            onClick={handleSync}
+            disabled={syncPending}
+          >
+            {syncPending ? "Menarik promosi..." : "Tarik Campaign dari TikTok Shop"}
+          </button>
+          {syncResult && "error" in syncResult && (
+            <div className="auth-error show">{syncResult.error}</div>
+          )}
+          {syncResult && "synced" in syncResult && (
+            <div className="result-card">
+              <div className="result-row">
+                <span>{syncResult.synced} campaign berhasil ditarik dari TikTok Shop.</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="controls">
         <div className="chipset">
@@ -153,6 +208,11 @@ export function EventsView({ events }: { events: EventItem[] }) {
                   <span className={`ticket-plat ${event.platform}`}>
                     {PLATFORM_LABEL[event.platform]}
                   </span>
+                  {event.source === "tiktok_api" && (
+                    <span className="prod-badge" data-platform="tiktokshop">
+                      <span className="swatch" /> Live dari TikTok
+                    </span>
+                  )}
                   <h3 className="ticket-title">{event.nama}</h3>
                   <p className="ticket-desc">{event.desc}</p>
                   <div className={`ticket-status status-${status}`}>

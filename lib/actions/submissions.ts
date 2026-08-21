@@ -34,9 +34,43 @@ export async function submitPromo(
     return { error: "Pilih minimal 1 produk." };
   }
 
-  const selectedEvents = eventIds
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Sesi berakhir, silakan masuk kembali." };
+  }
+
+  const staticEvents = eventIds
     .map((id) => EVENTS.find((e) => e.id === id))
     .filter((e): e is (typeof EVENTS)[number] => Boolean(e));
+
+  const staticIds = new Set(staticEvents.map((e) => e.id));
+  const remainingIds = eventIds.filter((id) => !staticIds.has(id));
+
+  let dbEvents: (typeof EVENTS)[number][] = [];
+  if (remainingIds.length > 0) {
+    const { data } = await supabase
+      .from("events")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("id", remainingIds);
+    dbEvents = (data ?? []).map((e) => ({
+      id: e.id,
+      platform: e.platform,
+      nama: e.nama,
+      desc: e.deskripsi,
+      mulai: e.mulai,
+      selesai: e.selesai,
+      syarat: e.syarat,
+      link: e.link,
+      butuh_diskon: e.butuh_diskon,
+      butuh_foto: e.butuh_foto,
+    }));
+  }
+
+  const selectedEvents = [...staticEvents, ...dbEvents];
 
   if (selectedEvents.length === 0) {
     return { error: "Event tidak ditemukan." };
@@ -46,14 +80,6 @@ export async function submitPromo(
   }
   if (selectedEvents.some((e) => e.butuh_foto) && !fotoNama) {
     return { error: "Upload foto promo." };
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: "Sesi berakhir, silakan masuk kembali." };
   }
 
   // No real marketplace API is wired up yet, so each event's outcome is

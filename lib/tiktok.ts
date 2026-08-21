@@ -175,3 +175,63 @@ export async function fetchTikTokProducts(
     nextPageToken: json.data.next_page_token || null,
   };
 }
+
+interface TikTokPromotion {
+  id: string;
+  title: string;
+  status: string;
+  begin_time: number;
+  end_time: number;
+  promotion_type?: string;
+}
+
+interface TikTokPromotionSearchResponse {
+  code: number;
+  message: string;
+  data: {
+    promotions: TikTokPromotion[];
+    next_page_token?: string;
+    total_count?: number;
+  };
+}
+
+// Best-effort endpoint (same family/version as products/search) — verify
+// path, method, and field names against a real sandbox response before
+// trusting this in production, same caveat as fetchTikTokProducts.
+export async function fetchTikTokPromotions(
+  accessToken: string,
+  shopCipher: string,
+  pageSize = 100,
+  pageToken?: string,
+): Promise<{ promotions: TikTokPromotion[]; nextPageToken: string | null }> {
+  const path = "/promotion/202309/promotions/search";
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const params: Record<string, string> = {
+    app_key: process.env.TIKTOK_APP_KEY!,
+    shop_cipher: shopCipher,
+    timestamp,
+    page_size: String(pageSize),
+    ...(pageToken ? { page_token: pageToken } : {}),
+  };
+  const bodyStr = JSON.stringify({});
+  const sign = signTikTokRequest(path, params, bodyStr);
+
+  const url = new URL(path, API_BASE);
+  Object.entries({ ...params, sign }).forEach(([key, value]) => url.searchParams.set(key, value));
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "x-tts-access-token": accessToken, "content-type": "application/json" },
+    body: bodyStr,
+  });
+  const json = (await res.json()) as TikTokPromotionSearchResponse;
+
+  if (!res.ok || json.code !== 0) {
+    throw new Error(json.message || "Gagal mengambil daftar promosi dari TikTok Shop.");
+  }
+
+  return {
+    promotions: json.data.promotions ?? [],
+    nextPageToken: json.data.next_page_token || null,
+  };
+}

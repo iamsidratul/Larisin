@@ -38,11 +38,15 @@ export async function GET(request: NextRequest) {
 
   let shopId: string | null = null;
   let shopCipher: string | null = null;
+  let shopCode: string | null = null;
+  let shopName: string | null = null;
   try {
     const shops = await fetchAuthorizedShops(tokenData.access_token);
     if (shops[0]) {
       shopId = shops[0].id;
       shopCipher = shops[0].cipher;
+      shopCode = shops[0].code;
+      shopName = shops[0].name;
     }
   } catch {
     // Koneksi tetap disimpan tanpa shop_id/shop_cipher; product/promotion sync
@@ -50,12 +54,17 @@ export async function GET(request: NextRequest) {
   }
 
   const nowIso = new Date().toISOString();
+  // Konflik dicek per (user, platform, shop_id) — bukan cuma per platform —
+  // supaya satu seller bisa hubungkan lebih dari satu toko TikTok Shop
+  // tanpa saling menimpa koneksi yang sudah ada.
   const { error } = await supabase.from("marketplace_connections").upsert(
     {
       user_id: user.id,
       platform: "tiktokshop",
       shop_id: shopId,
       shop_cipher: shopCipher,
+      shop_code: shopCode,
+      shop_name: shopName,
       access_token: encryptToken(tokenData.access_token),
       refresh_token: encryptToken(tokenData.refresh_token),
       token_expires_at: new Date(
@@ -66,7 +75,7 @@ export async function GET(request: NextRequest) {
       connected_at: nowIso,
       updated_at: nowIso,
     },
-    { onConflict: "user_id,platform" },
+    { onConflict: "user_id,platform,shop_id" },
   );
 
   if (error) {

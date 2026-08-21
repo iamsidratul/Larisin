@@ -29,7 +29,7 @@ export default async function ProductsPage({
       .select("id, status")
       .eq("user_id", user.id)
       .eq("platform", "tiktokshop")
-      .maybeSingle(),
+      .eq("status", "connected"),
   ]);
 
   const availableEvents = EVENTS.filter(
@@ -41,7 +41,7 @@ export default async function ProductsPage({
       products={(products ?? []) as Product[]}
       events={availableEvents}
       initialEventIds={event ? [event] : []}
-      tiktokConnected={tiktokConnection?.status === "connected"}
+      tiktokConnected={(tiktokConnection ?? []).length > 0}
     />
   );
 }

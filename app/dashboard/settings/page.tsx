@@ -14,14 +14,15 @@ export default async function SettingsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: tiktokConnection }, params] = await Promise.all([
+  const [{ data: profile }, { data: tiktokConnections }, params] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase
       .from("marketplace_connections")
-      .select("id, user_id, platform, shop_id, status, connected_at, updated_at")
+      .select("id, user_id, platform, shop_id, shop_code, shop_name, status, connected_at, updated_at")
       .eq("user_id", user.id)
       .eq("platform", "tiktokshop")
-      .maybeSingle(),
+      .eq("status", "connected")
+      .order("connected_at", { ascending: true }),
     searchParams,
   ]);
 
@@ -29,7 +30,7 @@ export default async function SettingsPage({
     <SettingsView
       profile={profile as Profile}
       email={user.email ?? ""}
-      tiktokConnection={tiktokConnection as MarketplaceConnection | null}
+      tiktokConnections={(tiktokConnections ?? []) as MarketplaceConnection[]}
       tiktokConnected={params.tiktok_connected === "1"}
       tiktokError={params.tiktok_error ?? null}
     />

@@ -49,6 +49,8 @@ export interface MarketplaceConnection {
   user_id: string;
   platform: Platform;
   shop_id: string | null;
+  shop_code: string | null;
+  shop_name: string | null;
   status: MarketplaceConnectionStatus;
   connected_at: string;
   updated_at: string;

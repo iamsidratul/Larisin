@@ -10,14 +10,14 @@ export default async function EventsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: dbEvents }, { data: connection }] = await Promise.all([
+  const [{ data: dbEvents }, { data: connections }] = await Promise.all([
     supabase.from("events").select("*").eq("user_id", user.id).order("mulai"),
     supabase
       .from("marketplace_connections")
       .select("id, status")
       .eq("user_id", user.id)
       .eq("platform", "tiktokshop")
-      .maybeSingle(),
+      .eq("status", "connected"),
   ]);
 
   const events: EventItem[] = (dbEvents ?? []).map((e) => ({
@@ -35,6 +35,6 @@ export default async function EventsPage() {
   }));
 
   return (
-    <EventsView events={events} tiktokConnected={connection?.status === "connected"} />
+    <EventsView events={events} tiktokConnected={(connections ?? []).length > 0} />
   );
 }

@@ -24,13 +24,13 @@ const TIKTOK_ERROR_MESSAGES: Record<string, string> = {
 export function SettingsView({
   profile,
   email,
-  tiktokConnection,
+  tiktokConnections,
   tiktokConnected,
   tiktokError,
 }: {
   profile: Profile;
   email: string;
-  tiktokConnection: MarketplaceConnection | null;
+  tiktokConnections: MarketplaceConnection[];
   tiktokConnected: boolean;
   tiktokError: string | null;
 }) {
@@ -42,8 +42,6 @@ export function SettingsView({
     updatePassword,
     passwordInitialState,
   );
-
-  const isConnected = tiktokConnection?.status === "connected";
 
   return (
     <>
@@ -68,35 +66,48 @@ export function SettingsView({
           </div>
         )}
 
-        <div className="result-card">
-          <div className="result-row">
-            <span>TikTok Shop</span>
-            {isConnected ? (
-              <span>
-                Terhubung sejak{" "}
-                {new Date(tiktokConnection!.connected_at).toLocaleDateString("id-ID", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-            ) : (
+        {tiktokConnections.length === 0 ? (
+          <div className="result-card">
+            <div className="result-row">
+              <span>TikTok Shop</span>
               <span>Belum terhubung</span>
-            )}
+            </div>
           </div>
-        </div>
-
-        {isConnected ? (
-          <form action={disconnectTikTokShop}>
-            <button className="submit-btn" type="submit" style={{ background: "#C0392B" }}>
-              Putuskan Koneksi
-            </button>
-          </form>
         ) : (
-          <a className="submit-btn" href="/api/auth/tiktok/connect" style={{ display: "inline-block", textDecoration: "none" }}>
-            Hubungkan TikTok Shop
-          </a>
+          tiktokConnections.map((conn) => (
+            <div className="result-card" key={conn.id}>
+              <div className="result-row">
+                <span>{conn.shop_name || conn.shop_code || conn.shop_id || "Toko TikTok Shop"}</span>
+                <span>
+                  Terhubung sejak{" "}
+                  {new Date(conn.connected_at).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+              <form action={disconnectTikTokShop} style={{ marginTop: 10 }}>
+                <input type="hidden" name="connection_id" value={conn.id} />
+                <button
+                  className="submit-btn"
+                  type="submit"
+                  style={{ background: "#C0392B", marginTop: 0, padding: "8px 14px", fontSize: 12.5 }}
+                >
+                  Putuskan Koneksi
+                </button>
+              </form>
+            </div>
+          ))
         )}
+
+        <a
+          className="submit-btn"
+          href="/api/auth/tiktok/connect"
+          style={{ display: "inline-block", textDecoration: "none" }}
+        >
+          {tiktokConnections.length === 0 ? "Hubungkan TikTok Shop" : "Hubungkan Toko Lain"}
+        </a>
       </div>
 
       <div className="submit-layout">

@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-export async function disconnectTikTokShop() {
+export async function disconnectTikTokShop(formData: FormData) {
+  const connectionId = String(formData.get("connection_id") ?? "");
+  if (!connectionId) return;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -18,8 +21,8 @@ export async function disconnectTikTokShop() {
       refresh_token: null,
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", user.id)
-    .eq("platform", "tiktokshop");
+    .eq("id", connectionId)
+    .eq("user_id", user.id);
 
   revalidatePath("/dashboard/settings");
 }

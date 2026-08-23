@@ -5,12 +5,11 @@ import type { ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { EventItem, Product } from "@/lib/types";
 import { PLATFORM_LABEL } from "@/lib/status";
-import { addProduct, deleteProduct, type ProductFormState } from "@/lib/actions/products";
+import { deleteProduct } from "@/lib/actions/products";
 import { submitPromo, type SubmitState } from "@/lib/actions/submissions";
 
 type SyncResult = { synced: number } | { error: string };
 
-const addProductInitialState: ProductFormState = null;
 const submitInitialState: SubmitState = null;
 
 const SUBMIT_STATUS_LABEL: Record<string, string> = {
@@ -46,7 +45,6 @@ export function ProductsView({
   const [diskonNilai, setDiskonNilai] = useState("");
   const [fotoNama, setFotoNama] = useState("");
 
-  const [addState, addAction, addPending] = useActionState(addProduct, addProductInitialState);
   const [submitState, submitAction, submitPending] = useActionState(submitPromo, submitInitialState);
 
   const shopGroups = useMemo(() => {
@@ -166,29 +164,8 @@ export function ProductsView({
             </div>
           )}
 
-          <form action={addAction} className="add-prod-form">
-            <div className="add-prod-row">
-              <input className="gf-input" name="nama" placeholder="Nama produk" required />
-              <input className="gf-input" name="sku" placeholder="SKU (opsional)" />
-            </div>
-            <div className="add-prod-row">
-              <input
-                className="gf-input"
-                name="stok"
-                type="number"
-                min={0}
-                placeholder="Stok"
-                defaultValue={0}
-              />
-            </div>
-            {addState?.error && <div className="auth-error show">{addState.error}</div>}
-            <button className="add-prod-btn" type="submit" disabled={addPending}>
-              {addPending ? "Menambah..." : "+ Tambah Produk"}
-            </button>
-          </form>
-
           {products.length === 0 && (
-            <p className="lede">Belum ada produk. Tambahkan produk pertamamu di atas.</p>
+            <p className="lede">Belum ada produk. Tarik produk dari TikTok Shop untuk memulai.</p>
           )}
 
           {shopGroups.length > 0 && (

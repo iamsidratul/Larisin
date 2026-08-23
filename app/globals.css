@@ -386,30 +386,11 @@ footer{ text-align:center; margin-top:50px; font-size:12px; color: var(--ink-sof
 .prod-badge .swatch{ width:6px; height:6px; border-radius:50%; }
 .prod-badge[data-platform="tiktokshop"] .swatch{ background: var(--tiktok-accent); }
 
-/* New: per-row delete + inline add-product form (the approved design has 4
-   hardcoded products and no add/delete UI at all; since products are now
-   real per-account rows a way to add/remove them is required — added using
-   only existing input/button classes, per explicit sign-off) */
 .prod-del{
   margin-left:auto; border:none; background:none; color:var(--ink-soft); cursor:pointer;
   font-size:15px; padding:4px 6px; border-radius:6px; line-height:1;
 }
 .prod-del:hover{ background: var(--bg); color:#C0392B; }
-
-.add-prod-form{
-  display:flex; flex-direction:column; gap:8px;
-  background: var(--bg); border:1px dashed var(--line); border-radius:10px;
-  padding: 12px 13px; margin-bottom: 10px;
-}
-.add-prod-row{ display:flex; gap:8px; }
-.add-prod-row .gf-input{ margin-bottom:0; }
-.add-prod-btn{
-  align-self:flex-start;
-  background: var(--ink); color:#fff; border:none;
-  padding: 8px 14px; border-radius: 8px;
-  font-family: inherit; font-weight:700; font-size:12.5px; cursor:pointer;
-}
-.add-prod-btn:hover{ opacity:0.85; }
 
 .evt-row{
   display:flex; align-items:center; gap:12px;

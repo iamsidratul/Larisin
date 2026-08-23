@@ -340,6 +340,26 @@ footer{ text-align:center; margin-top:50px; font-size:12px; color: var(--ink-sof
 }
 .section-chevron.open{ transform: rotate(90deg); }
 
+.shop-tabs{
+  display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:14px;
+  scrollbar-width: thin;
+}
+.shop-tab{
+  flex-shrink:0; display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+  background: var(--bg-raised); border:1.5px solid var(--line); border-radius:12px;
+  padding:10px 14px; cursor:pointer; min-width:150px; max-width:200px;
+  font-family:inherit; text-align:left; transition: border-color .15s ease, background .15s ease;
+}
+.shop-tab:hover{ border-color: var(--ink); }
+.shop-tab.active{ background: var(--ink); border-color: var(--ink); }
+.shop-tab-name{
+  font-size:12.5px; font-weight:700; color: var(--ink);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+}
+.shop-tab.active .shop-tab-name{ color:#fff; }
+.shop-tab-count{ font-size:10.5px; color: var(--ink-soft); font-family: var(--font-jetbrains-mono), monospace; }
+.shop-tab.active .shop-tab-count{ color: rgba(255,255,255,0.7); }
+
 .prod-badge{
   display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:600;
   padding:2px 8px; border-radius:999px; border:1px solid var(--line); color: var(--ink-soft);
@@ -383,6 +403,19 @@ footer{ text-align:center; margin-top:50px; font-size:12px; color: var(--ink-sof
 .evt-name{ font-size:13px; font-weight:600; }
 .evt-meta{ display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap; }
 .form-flag{ font-size:10px; font-weight:600; color: var(--accent-deep); background: rgba(124,58,237,0.08); padding:2px 7px; border-radius:5px; }
+
+.evt-list-horizontal{ display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; }
+.evt-card{
+  flex-shrink:0; width:220px; display:flex; flex-direction:column; gap:6px;
+  background: var(--bg-raised); border:1.5px solid var(--line); border-radius:12px;
+  padding:13px 14px; cursor:pointer; transition: border-color .15s ease;
+}
+.evt-card:hover{ border-color: var(--ink); }
+.evt-card.selected{ border-color: var(--ink); background: var(--bg); }
+.evt-card input{ width:16px; height:16px; accent-color: var(--ink); align-self:flex-end; margin-top:-4px; }
+.evt-card .evt-name{
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+}
 
 .global-form{
   margin-top: 14px;
